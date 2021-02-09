@@ -17,19 +17,26 @@ class ViewController: UIViewController {
      */
     private var decimal = false
     
+    /**
+        Tells if the current value is negative or not.
+     */
+    private var negative = false
+    
     @IBAction private func touchButton (_ sender: UIButton){
         
         let numeric = Int(sender.currentTitle!)
         if numeric != nil {
             // Do not count the comma as a number
-            if display.text?.count == 9 + decimal.int {
+            if display.text?.count == 9 + decimal.int + negative.int {
                 return;
             }
-            setClearButton()
+            
             if replaceZero() {
                 display.text?.removeLast()
             }
-                display.text?.append(String(numeric!))
+            display.text?.append(String(numeric!))
+            
+            setClearButton()
             
         } else {
             switch sender.currentTitle {
@@ -47,20 +54,26 @@ class ViewController: UIViewController {
                 if !decimal {
                     display.text?.append(",")
                     decimal = true
+                    setClearButton()
                 }
             case "⁺∕₋":
                 if display.text?.first == "-" {
                     display.text?.removeFirst()
+                    negative = false
                 } else {
                     display.text?.insert("-", at: display.text!.startIndex)
+                    negative = true
                 }
             case "%":
-                // Without this it would display 0,0
-                if replaceZero() {
-                    break
-                }
                 let result = (Double(toComputer(str: display.text!))! / 100)
-                display.text = toHuman(str: String(result))
+                if result == 0 {
+                    display.text = "0"
+                    negative = false
+                    decimal = false
+                } else {
+                    display.text = toHuman(str: String(result))
+                }
+                
             default:
                 // This is just a placeholder
                 display.text = "H"
@@ -73,13 +86,18 @@ class ViewController: UIViewController {
         Returns true if the initial 0 needs to be replaced.
      */
     private func replaceZero() -> Bool{
-        return display.text?.last == "0"
+        if display.text!.count <= 2 {
+            return display.text?.last == "0"
+        } else {
+            return false
+        }
     }
     /**
         Sets the title for the "clear" button to "C".
      */
     private func setClearButton() {
-        if let index = buttons.firstIndex(where: {$0.currentTitle == "AC"}) {
+        if let index = buttons.firstIndex(where: {$0.currentTitle == "AC"}),
+           display.text?.last != "0" {
             buttons[index].setTitle("C", for: .normal)
         }
     }
